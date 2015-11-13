@@ -1,3 +1,4 @@
 #Tokens = ["foo", "bar"]
 ListenAddress = "127.0.0.1:8888"
 AsyncResponse = false
+HttpClientTimeout = 3

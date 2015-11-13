@@ -169,7 +169,8 @@ func GetTicker(symbol string) (*YahooQuote, error) {
 		return nil, err
 	}
 	query.RawQuery = params.Encode()
-	resp, err := http.Get(query.String())
+	client := http.Client{Timeout: Config.HttpClientTimeout}
+	resp, err := client.Get(query.String())
 	if err != nil {
 		return nil, err
 	}
