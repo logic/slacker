@@ -1,5 +1,5 @@
 Slacker is Copyright 2015 Ed Marshall. All rights reserved. Use of this
-source code is goverened by the terms of the GNU General Public LIcense,
+source code is goverened by the terms of the GNU General Public License,
 either version 3, or (at your option) any later version; please see the
 file COPYING for more details.
 
