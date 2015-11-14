@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -17,17 +18,74 @@ import (
 	"time"
 )
 
-// Ticker is the handler for the "/ticker" Slack slash command.
-func Ticker(w http.ResponseWriter, req *http.Request) error {
-	symbol := strings.ToUpper(req.FormValue("text"))
-	if len(symbol) == 0 {
-		return StatusError{http.StatusBadRequest,
-			errors.New("Usage: /ticker [symbol]")}
+// TickerOpts represnts a set of parsed /ticker command options.
+type TickerOpts struct {
+	Symbol string
+	Span   string
+	Type   string
+}
+
+// ParseTickerCommand takes the /ticker command line and parses it into
+// TickerOpts, returning an error if anything goes wrong.
+func ParseTickerCommand(cmd string) (TickerOpts, error) {
+	var opts TickerOpts
+	var output bytes.Buffer
+	flags := flag.NewFlagSet("/ticker", flag.ContinueOnError)
+	flags.Usage = func() {
+		fmt.Fprintln(&output, "usage: /ticker [flags] symbol")
+		flags.PrintDefaults()
+	}
+	flags.SetOutput(&output)
+	flags.StringVar(&opts.Span, "span", "1d", "timespan of chart [1d|5d|1m|3m|6m|1y|2y|5y|my]")
+	flags.StringVar(&opts.Type, "type", "l", "type of chart: line, bar, or candle [l|b|c]")
+	if err := flags.Parse(strings.Split(cmd, " ")); err != nil {
+		fmt.Fprintln(&output, err)
+		return opts, errors.New(output.String())
 	}
 
-	if regexp.MustCompile(`[^A-Z0-9.]+`).MatchString(symbol) {
-		return StatusError{http.StatusBadRequest,
-			errors.New("Invalid ticker symbol (letters, numbers, and '.' only)")}
+	log.Println(flags.Args())
+
+	switch opts.Span {
+	case "1d", "5d", "1m", "3m", "6m", "1y", "2y", "5y", "my":
+		break
+	default:
+		fmt.Fprintln(&output, "time span must be one of 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y, or my")
+		flags.Usage()
+		return opts, errors.New(output.String())
+	}
+
+	switch opts.Type {
+	case "l", "b", "c":
+		break
+	default:
+		fmt.Fprintln(&output, "type must be one of l, b, or c")
+		flags.Usage()
+		return opts, errors.New(output.String())
+	}
+
+	if flags.NArg() != 1 {
+		if flags.NArg() == 0 {
+			fmt.Fprintln(&output, "no ticker symbol specified")
+		} else {
+			fmt.Fprintln(&output, "only one ticker symbol at a time")
+		}
+		flags.Usage()
+		return opts, errors.New(output.String())
+	}
+
+	opts.Symbol = strings.ToUpper(flags.Arg(0))
+	if regexp.MustCompile(`[^A-Z0-9.]+`).MatchString(opts.Symbol) {
+		return opts, errors.New("Invalid ticker symbol (letters, numbers, and '.' only)")
+	}
+
+	return opts, nil
+}
+
+// Ticker is the handler for the "/ticker" Slack slash command.
+func Ticker(w http.ResponseWriter, req *http.Request) error {
+	opts, err := ParseTickerCommand(req.FormValue("text"))
+	if err != nil {
+		return StatusError{http.StatusBadRequest, err}
 	}
 
 	// We can either do responses in-line, if we think we can get it done
@@ -43,12 +101,12 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 			return StatusError{http.StatusBadRequest,
 				errors.New("No response URL supplied (Slack bug?)")}
 		}
-		go TickerPoster(symbol, responseUrl)
+		go TickerPoster(opts, responseUrl)
 		payload = map[string]interface{}{
 			"response_type": "in_channel",
 		}
 	} else {
-		payload = BuildTickerPayload(symbol)
+		payload = BuildTickerPayload(opts)
 		if _, ok := payload["attachments"]; !ok {
 			// In the async case, we'd want to deliver this as payload to
 			// the caller, but for immediate-response, we might as well
@@ -72,14 +130,14 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 
 // BuildTickerPayload formats the requested ticker symbol information into
 // a JSON payload for rendering to the user in Slack.
-func BuildTickerPayload(symbol string) map[string]interface{} {
+func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 	payload := map[string]interface{}{}
-	quote, err := GetTicker(symbol)
+	quote, err := GetTicker(opts.Symbol)
 	if err != nil {
 		payload["text"] = fmt.Sprintf("Ticker symbol lookup failed for `%s`: %s",
-			symbol, err.Error())
+			opts.Symbol, err.Error())
 	} else if err != nil || quote == nil {
-		payload["text"] = fmt.Sprintf("Unknown ticker symbol `%s`", symbol)
+		payload["text"] = fmt.Sprintf("Unknown ticker symbol `%s`", opts.Symbol)
 	} else {
 		emoji := ":chart_with_upwards_trend:"
 		color := "good"
@@ -102,8 +160,8 @@ func BuildTickerPayload(symbol string) map[string]interface{} {
 			// The "fresh" parameter is non-standard, but is used
 			// to defeat any caching here.
 			"image_url": fmt.Sprintf(
-				"https://chart.finance.yahoo.com/t?s=%s&width=400&height=185&fresh=%d",
-				quote.Symbol, time.Now().Unix()),
+				"https://chart.finance.yahoo.com/z?s=%s&&z=s&t=%s&q=%s&fresh=%d",
+				quote.Symbol, opts.Span, opts.Type, time.Now().Unix()),
 			"mrkdwn_in": []string{"text", "pretext"},
 		}}
 		payload["response_type"] = "in_channel"
@@ -113,8 +171,8 @@ func BuildTickerPayload(symbol string) map[string]interface{} {
 
 // TickerPoster, as a goroutine, collects and formats the requested ticker
 // symbol information, and posts it back to Slack asynchronously.
-func TickerPoster(symbol string, response_url string) {
-	payload := BuildTickerPayload(symbol)
+func TickerPoster(opts TickerOpts, response_url string) {
+	payload := BuildTickerPayload(opts)
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Couldn't marshal payload: %v", payload)
