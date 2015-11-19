@@ -182,7 +182,7 @@ func GetTicker(symbol string) (*YahooQuote, error) {
 		return nil, err
 	}
 
-	if len(yr.Query.Results.Quote.Name) == 0 {
+	if len(yr.Query.Results.Quote.Symbol) == 0 {
 		return nil, nil
 	} else {
 		return &yr.Query.Results.Quote, nil

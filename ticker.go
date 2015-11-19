@@ -43,8 +43,6 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 		return opts, errors.New(output.String())
 	}
 
-	log.Println(flags.Args())
-
 	switch opts.Span {
 	case "1d", "5d", "1m", "3m", "6m", "1y", "2y", "5y", "my":
 		break
@@ -145,16 +143,27 @@ func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 			emoji = ":chart_with_downwards_trend:"
 			color = "danger"
 		}
+		var name string
+		if len(quote.Name) != 0 {
+			name = fmt.Sprintf("%s - %s", quote.Symbol, quote.Name)
+		} else {
+			name = quote.Symbol
+		}
+		var change string
+		if len(quote.PercentChange) != 0 && len(quote.PreviousClose) != 0 {
+			change = fmt.Sprintf("_(%s from previous close of %s)_ ",
+				quote.PercentChange, quote.PreviousClose)
+		} else {
+			change = ""
+		}
 		payload["attachments"] = []map[string]interface{}{{
-			"fallback": fmt.Sprintf(
-				"%s (%s): %s (%s from previous close of %s) as of %s %s",
-				quote.Symbol, quote.Name, quote.LastTradePriceOnly,
-				quote.PercentChange, quote.PreviousClose, quote.LastTradeTime,
-				quote.LastTradeDate),
-			"pretext": fmt.Sprintf("%s *<https://finance.yahoo.com/q?s=%s|%s - %s>*",
-				emoji, quote.Symbol, quote.Symbol, quote.Name),
-			"text": fmt.Sprintf("*%s* _(%s from previous close of %s)_\n%s %s",
-				quote.LastTradePriceOnly, quote.PercentChange, quote.PreviousClose,
+			"fallback": fmt.Sprintf("%s: %s %sas of %s %s",
+				name, quote.LastTradePriceOnly, change,
+				quote.LastTradeTime, quote.LastTradeDate),
+			"pretext": fmt.Sprintf("%s *<https://finance.yahoo.com/q?s=%s|%s>*",
+				emoji, quote.Symbol, name),
+			"text": fmt.Sprintf("*%s* %s\n%s %s",
+				quote.LastTradePriceOnly, change,
 				quote.LastTradeTime, quote.LastTradeDate),
 			"color": color,
 			// The "fresh" parameter is non-standard, but is used
