@@ -137,12 +137,21 @@ func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 	} else if err != nil || quote == nil {
 		payload["text"] = fmt.Sprintf("Unknown ticker symbol `%s`", opts.Symbol)
 	} else {
-		emoji := ":chart_with_upwards_trend:"
-		color := "good"
-		if quote.PercentChange[0] == '-' {
-			emoji = ":chart_with_downwards_trend:"
-			color = "danger"
+		var emoji string
+		var color string
+		if len(quote.PercentChange) != 0 {
+			if quote.PercentChange[0] == '-' {
+				emoji = ":chart_with_downwards_trend:"
+				color = "danger"
+			} else {
+				emoji = ":chart_with_upwards_trend:"
+				color = "good"
+			}
+		} else {
+			emoji = ":bar_chart:"
+			color = "warning"
 		}
+
 		var name string
 		if len(quote.Name) != 0 {
 			name = fmt.Sprintf("%s - %s", quote.Symbol, quote.Name)
