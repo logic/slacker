@@ -23,6 +23,7 @@ type TickerOpts struct {
 	Symbol string
 	Span   string
 	Type   string
+	Log    bool
 }
 
 // ParseTickerCommand takes the /ticker command line and parses it into
@@ -38,6 +39,7 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 	flags.SetOutput(&output)
 	flags.StringVar(&opts.Span, "span", "1d", "timespan of chart [1d|5d|1m|3m|6m|1y|2y|5y|my]")
 	flags.StringVar(&opts.Type, "type", "l", "type of chart: line, bar, or candle [l|b|c]")
+	flags.BoolVar(&opts.Log, "log", true, "use log scale [true|false]")
 	if err := flags.Parse(strings.Split(cmd, " ")); err != nil {
 		fmt.Fprintln(&output, err)
 		return opts, errors.New(output.String())
@@ -158,6 +160,7 @@ func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 		} else {
 			name = quote.Symbol
 		}
+
 		var change string
 		if len(quote.PercentChange) != 0 && len(quote.PreviousClose) != 0 {
 			change = fmt.Sprintf("_(%s from previous close of %s)_ ",
@@ -165,6 +168,14 @@ func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 		} else {
 			change = ""
 		}
+
+		var scale string
+		if opts.Log {
+			scale = "on"
+		} else {
+			scale = "off"
+		}
+
 		payload["attachments"] = []map[string]interface{}{{
 			"fallback": fmt.Sprintf("%s: %s %sas of %s %s",
 				name, quote.LastTradePriceOnly, change,
@@ -178,8 +189,8 @@ func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 			// The "fresh" parameter is non-standard, but is used
 			// to defeat any caching here.
 			"image_url": fmt.Sprintf(
-				"https://chart.finance.yahoo.com/z?s=%s&&z=s&t=%s&q=%s&fresh=%d",
-				quote.Symbol, opts.Span, opts.Type, time.Now().Unix()),
+				"https://chart.finance.yahoo.com/z?s=%s&&z=s&t=%s&q=%s&l=%s&fresh=%d",
+				quote.Symbol, opts.Span, opts.Type, scale, time.Now().Unix()),
 			"mrkdwn_in": []string{"text", "pretext"},
 		}}
 		payload["response_type"] = "in_channel"
