@@ -12,14 +12,6 @@ import (
 	"time"
 )
 
-// YahooTiming is used by several elements of Query.Diagnostics, so we
-// pull it out for simlicity's sake.
-type YahooTiming struct {
-	ExecutionStartTime int `json:"execution-start-time,string"`
-	ExecutionStopTime  int `json:"execution-stop-time,string"`
-	ExecutionTime      int `json:"execution-time,string"`
-}
-
 // YahooResponse is the full JSON document received back from the Yahoo
 // Finance API.
 //
@@ -30,30 +22,8 @@ type YahooTiming struct {
 // sufficient.
 type YahooResponse struct {
 	Query struct {
-		Created     time.Time
-		Count       int
-		Diagnostics struct {
-			BuildVersion string `json:"build-version"`
-			Cache        struct {
-				*YahooTiming
-				Content string
-				Method  string
-				Type    string
-			}
-			Javascript struct {
-				*YahooTiming
-				InstructionsUsed int    `json:"instructions-used,string"`
-				TableName        string `json:"table-name"`
-			}
-			PubliclyCallable bool `json:"publiclyCallable,string"`
-			Query            map[string]*string
-			ServiceTime      string `json:"service-time"`
-			Url              []struct {
-				*YahooTiming
-				Content string
-			}
-			UserTime string `json:"user-time"`
-		}
+		Created time.Time
+		Count   int
 		Lang    string
 		Results struct {
 			Quote YahooQuote
@@ -159,7 +129,7 @@ func GetTicker(symbol string) (*YahooQuote, error) {
 				symbol),
 		},
 		"format":      {"json"},
-		"diagnostics": {"true"},
+		"diagnostics": {"false"},
 		"env":         {"http://datatables.org/alltables.env"},
 		"callback":    {""},
 	}
