@@ -4,7 +4,10 @@
 
 package main
 
-import "time"
+import (
+	"io"
+	"time"
+)
 
 import "github.com/BurntSushi/toml"
 
@@ -18,9 +21,9 @@ type Configuration struct {
 
 // LoadConfig sets our configuration defaults, and loads a configuration from
 // the TOML-formatted configuration file over the defaults.
-func LoadConfig() (Configuration, error) {
+func LoadConfig(configStream io.Reader) (Configuration, error) {
 	config := Configuration{nil, "0.0.0.0:8888", false, 0}
-	_, err := toml.DecodeFile("slack.toml", &config)
+	_, err := toml.DecodeReader(configStream, &config)
 
 	// Normalize timeout to seconds, because toml lacks duration support
 	config.HTTPClientTimeout = config.HTTPClientTimeout * time.Second
