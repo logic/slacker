@@ -13,6 +13,9 @@ import (
 // Config is our global (read-only) configuration state.
 var Config Configuration
 
+// Commands are any Slack commands that we recognize, and their handlers
+var Commands SlashCommands
+
 func main() {
 	f, err := os.Open("slack.toml")
 	if err != nil {
@@ -22,6 +25,10 @@ func main() {
 		log.Fatal("Could not decode configuration: ", err)
 	}
 	f.Close()
+
+	Commands = SlashCommands{
+		"/ticker": Ticker,
+	}
 
 	http.Handle("/cmd", ErrorHandler(SlackDispatcher))
 	if err = http.ListenAndServe(Config.ListenAddress, nil); err != nil {

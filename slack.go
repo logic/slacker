@@ -56,6 +56,9 @@ func (h ErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// SlashCommands represents a slack command and a handler for it
+type SlashCommands map[string]ErrorHandler
+
 // SlackDispatcher does basic validation, then routes Slack slash commands
 // to an appropriate handler.
 func SlackDispatcher(w http.ResponseWriter, req *http.Request) error {
@@ -78,11 +81,11 @@ func SlackDispatcher(w http.ResponseWriter, req *http.Request) error {
 		}
 	}
 	command := strings.ToLower(req.FormValue("command"))
-	switch command {
-	case "/ticker":
-		return Ticker(w, req)
-	default:
-		return StatusError{http.StatusBadRequest,
-			fmt.Errorf("Command '%s' is invalid", command)}
+
+	handler, ok := Commands[command]
+	if ok {
+		return handler(w, req)
 	}
+	return StatusError{http.StatusBadRequest,
+		fmt.Errorf("Command '%s' is invalid", command)}
 }
