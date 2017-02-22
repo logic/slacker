@@ -18,6 +18,8 @@ deploy:
         PVAqWcCVtgk4IG17xk2cBtR0uZsnxqBhBNmaOH9tcJBa9njYkN9kImmlnziKw4cH34scz
         6w0t9TUNxuxAmbSkdxeM1aRCE6TKM35GUnkZOJYoKt37FfMHbyrbxy1Qi6kGJWJ9pHj68
         VsmA2Rg8bdoNyeabJcu/vjM0FalMsyVeIIIP4egpIo0rmniZI2Y1+NGlqAqkR8=
+  skip_cleanup: true
   file: slacker
   "on":
     repo: logic/slacker
+    tags: true
