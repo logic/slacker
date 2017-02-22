@@ -3,3 +3,21 @@ language: go
 
 go:
 - 1.7.x
+
+deploy:
+  provider: releases
+  api_key:
+    secure: >
+        Vapx2krBEg9Gc5uPLDYKC0Z4V008U2LSydRjgm/DxN5I62uT1H5/QkNhDAVaoizmpPJcF
+        ZlIdlyxCkpVAuVG1kONgcccR+Jzib90ItiQrH309hWqP7X0IApw9FTz98hMWTJJn6EA9X
+        Clo5wK/NcCKt9W4CJ+bM10UU3tg81IByyipjwaPuA1EVSaOIuWmKSnv+1USkx1+MZARhw
+        Kr1S4fuVpNWVp8W7wBlP27VKN2K8pxc5xgO5JkYx6U5ONc2Y5uJX5QWPPcYVWgjqOKBUk
+        ypSECTW0nTHPq4wiiCw+E/vpf13Zr0o6IDWvWBz3N6NJAMRZj8/94X1BoWt4W4mE0uSwc
+        ngYQS4OYp0NSKdJgfNnpi9MY+Qfml+3gybNnCancT9bw7Ce3dd2lGnhIsxTMXtItbs3fR
+        w2I0BnX933RhbUPzpQ4mde70Z3NdKbrG/o6I8gyw/CgjosLqB0PXpb6w2nqDzkKaRqYLu
+        PVAqWcCVtgk4IG17xk2cBtR0uZsnxqBhBNmaOH9tcJBa9njYkN9kImmlnziKw4cH34scz
+        6w0t9TUNxuxAmbSkdxeM1aRCE6TKM35GUnkZOJYoKt37FfMHbyrbxy1Qi6kGJWJ9pHj68
+        VsmA2Rg8bdoNyeabJcu/vjM0FalMsyVeIIIP4egpIo0rmniZI2Y1+NGlqAqkR8=
+  file: slacker
+  "on":
+    repo: logic/slacker
