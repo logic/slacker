@@ -96,12 +96,12 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 	// because we have to decide whether to show it here.
 	var payload map[string]interface{}
 	if Config.AsyncResponse {
-		responseUrl := req.FormValue("response_url")
-		if len(responseUrl) == 0 {
+		responseURL := req.FormValue("response_url")
+		if len(responseURL) == 0 {
 			return StatusError{http.StatusBadRequest,
 				errors.New("No response URL supplied (Slack bug?)")}
 		}
-		go TickerPoster(opts, responseUrl)
+		go TickerPoster(opts, responseURL)
 		payload = map[string]interface{}{
 			"response_type": "in_channel",
 		}
@@ -198,27 +198,27 @@ func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 	return payload
 }
 
-// TickerPoster, as a goroutine, collects and formats the requested ticker
+// TickerPoster (as a goroutine) collects and formats the requested ticker
 // symbol information, and posts it back to Slack asynchronously.
-func TickerPoster(opts TickerOpts, response_url string) {
+func TickerPoster(opts TickerOpts, responseURL string) {
 	payload := BuildTickerPayload(opts)
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Couldn't marshal payload: %v", payload)
 		return
 	}
-	resp, err := http.Post(response_url, "application/json", bytes.NewReader(jsonPayload))
+	resp, err := http.Post(responseURL, "application/json", bytes.NewReader(jsonPayload))
 	if err != nil {
-		log.Printf("Failed to post response to '%s': %s\n", response_url, err.Error())
+		log.Printf("Failed to post response to '%s': %s\n", responseURL, err.Error())
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf("Couldn't read from '%s': %s\n", response_url, err.Error())
+			log.Printf("Couldn't read from '%s': %s\n", responseURL, err.Error())
 			return
 		}
-		log.Printf("Got %d from %s: %s\n", resp.StatusCode, response_url, string(body))
+		log.Printf("Got %d from %s: %s\n", resp.StatusCode, responseURL, string(body))
 	}
 }

@@ -24,10 +24,10 @@ type StatusError struct {
 	Err  error
 }
 
-// StatusError.Error() returns the text of the returned error.
+// Error returns the text of the returned error.
 func (se StatusError) Error() string { return se.Err.Error() }
 
-// StatusError.Status() returns the HTTP error code of our raised error.
+// Status returns the HTTP error code of our raised error.
 func (se StatusError) Status() int { return se.Code }
 
 // ErrorHandler extended the Handler interface to include an error return value.

@@ -47,7 +47,7 @@ type YahooQuote struct {
 	ChangeFromYearHigh                             string
 	ChangeFromYearLow                              string
 	ChangeinPercent                                string
-	Change_PercentChange                           string
+	ChangePercentChange                            string `json:"Change_PercentChange"`
 	ChangePercentRealtime                          string
 	ChangeRealtime                                 string
 	Change                                         string
@@ -116,7 +116,7 @@ type YahooQuote struct {
 	YearHigh                                       string
 	YearLow                                        string
 	YearRange                                      string
-	_Symbol                                        string `json:"symbol"`
+	LowerSymbol                                    string `json:"symbol"`
 }
 
 // GetTicker asks Yahoo Finance for a complete rundown of information about
@@ -139,7 +139,7 @@ func GetTicker(symbol string) (*YahooQuote, error) {
 		return nil, err
 	}
 	query.RawQuery = params.Encode()
-	client := http.Client{Timeout: Config.HttpClientTimeout}
+	client := http.Client{Timeout: Config.HTTPClientTimeout}
 	resp, err := client.Get(query.String())
 	if err != nil {
 		return nil, err
@@ -154,7 +154,6 @@ func GetTicker(symbol string) (*YahooQuote, error) {
 
 	if len(yr.Query.Results.Quote.LastTradePriceOnly) == 0 {
 		return nil, nil
-	} else {
-		return &yr.Query.Results.Quote, nil
 	}
+	return &yr.Query.Results.Quote, nil
 }

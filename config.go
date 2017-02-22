@@ -8,11 +8,12 @@ import "time"
 
 import "github.com/BurntSushi/toml"
 
+// Configuration represents the fields of a TOML configuration file.
 type Configuration struct {
 	Tokens            []string
 	ListenAddress     string
 	AsyncResponse     bool
-	HttpClientTimeout time.Duration
+	HTTPClientTimeout time.Duration
 }
 
 // LoadConfig sets our configuration defaults, and loads a configuration from
@@ -22,7 +23,7 @@ func LoadConfig() (Configuration, error) {
 	_, err := toml.DecodeFile("slack.toml", &config)
 
 	// Normalize timeout to seconds, because toml lacks duration support
-	config.HttpClientTimeout = config.HttpClientTimeout * time.Second
+	config.HTTPClientTimeout = config.HTTPClientTimeout * time.Second
 
 	return config, err
 }
