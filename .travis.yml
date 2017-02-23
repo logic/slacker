@@ -39,8 +39,8 @@ script:
   - env GOOS=openbsd GOARCH=arm GOARM=7 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_armv7.tar.gz slacker
   - env GOOS=openbsd GOARCH=arm go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_arm.tar.gz slacker
   - env GOOS=solaris GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.solaris_amd64.tar.gz slacker
-  - env GOOS=windows GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_386.tar.gz slacker
-  - env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_amd64.tar.gz slacker
+  - env GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -9 slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_386.zip slacker
+  - env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -9 slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_amd64.zip slacker
 
 go:
   - 1.8.x
@@ -61,7 +61,9 @@ deploy:
         VsmA2Rg8bdoNyeabJcu/vjM0FalMsyVeIIIP4egpIo0rmniZI2Y1+NGlqAqkR8=
   skip_cleanup: true
   file_glob: true
-  file: "slacker-*.tar.gz"
+  file:
+    - "slacker-*.tar.gz"
+    - "slacker-*.zip"
   "on":
     repo: logic/slacker
     tags: true
