@@ -82,8 +82,7 @@ func SlackDispatcher(w http.ResponseWriter, req *http.Request) error {
 	}
 	command := strings.ToLower(req.FormValue("command"))
 
-	handler, ok := Commands[command]
-	if ok {
+	if handler, ok := Commands[command]; ok {
 		return handler(w, req)
 	}
 	return StatusError{http.StatusBadRequest,
