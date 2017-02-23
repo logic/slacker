@@ -10,8 +10,6 @@ script:
   - go test -v ./...
   - env GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_386.tar.gz slacker
   - env GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_amd64.tar.gz slacker
-  - env GOOS=darwin GOARCH=arm GOARM=7 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_arm.tar.gz slacker
-  - env GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_arm64.tar.gz slacker
   - env GOOS=dragonfly GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.dragonfly_amd64.tar.gz slacker
   - env GOOS=freebsd GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_386.tar.gz slacker
   - env GOOS=freebsd GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_amd64.tar.gz slacker
