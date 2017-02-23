@@ -78,6 +78,8 @@ script:
   - env GOOS=windows GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" -o
     slacker.exe && zip -9
     slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_amd64.zip slacker.exe
+  - sha256sum *.tar.gz *.zip >
+    slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.sha256sum.txt
 
 go:
   - 1.8.x
@@ -99,6 +101,7 @@ deploy:
   skip_cleanup: true
   file_glob: true
   file:
+    - "slacker-*.sha256sum.txt"
     - "slacker-*.tar.gz"
     - "slacker-*.zip"
   "on":
