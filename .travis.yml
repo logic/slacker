@@ -1,8 +1,38 @@
 ---
 language: go
 
+matrix:
+  include:
+    - os: linux
+      env:
+        - GOOS=linux GOARCH=amd64
+    - os: linux
+      env:
+        - GOOS=linux GOARCH=386
+    - os: linux
+      env:
+        - GOOS=linux GOARCH=arm
+    - os: osx
+      env:
+        - GOOS=darwin GOARCH=amd64
+    - os: osx
+      env:
+        - GOOS=darwin GOARCH=386
+    - os: osx
+      env:
+        - GOOS=darwin GOARCH=arm
+    - os: linux
+      env:
+        - GOOS=windows GOARCH=amd64
+    - os: linux
+      env:
+        - GOOS=windows GOARCH=386
+    - os: linux
+      env:
+        - GOOS=windows GOARCH=arm
+
 go:
-- 1.7.x
+  - 1.7.x
 
 deploy:
   provider: releases
