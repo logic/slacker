@@ -10,6 +10,21 @@ import (
 	"time"
 )
 
+func TestTokens(t *testing.T) {
+	var tk Tokens
+	if tk.String() != "[]" {
+		t.Error("expected [], got", tk.String())
+	}
+	tk.Set("token1")
+	if tk.String() != "[token1]" {
+		t.Error("expected [token1], got", tk.String())
+	}
+	tk.Set("token2")
+	if tk.String() != "[token1 token2]" {
+		t.Error("expected [token1 token2], got", tk.String())
+	}
+}
+
 func TestConfigListenAddress(t *testing.T) {
 	var c Configuration
 	if err := LoadConfig(&c, strings.NewReader("Tokens = [\"a\", \"b\"]\n")); err != nil {

@@ -22,6 +22,14 @@ func TestParseTickerCommand(t *testing.T) {
 			valid: true,
 		},
 		{
+			input: "X Y",
+			valid: false,
+		},
+		{
+			input: "invalid-ticker",
+			valid: false,
+		},
+		{
 			input: "-span=1d X",
 			valid: true,
 		},
