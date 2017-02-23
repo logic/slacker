@@ -30,7 +30,7 @@ func main() {
 		"/ticker": Ticker,
 	}
 
-	http.Handle("/cmd", ErrorHandler(SlackDispatcher))
+	http.Handle("/cmd", RequestIDMiddleware(ErrorHandler(SlackDispatcher)))
 	if err = http.ListenAndServe(Config.ListenAddress, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

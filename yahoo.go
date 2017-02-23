@@ -5,8 +5,10 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -26,7 +28,7 @@ type YahooResponse struct {
 		Count   int
 		Lang    string
 		Results struct {
-			Quote YahooQuote
+			Quote *YahooQuote
 		}
 	}
 }
@@ -122,7 +124,7 @@ type YahooQuote struct {
 // GetTicker asks Yahoo Finance for a complete rundown of information about
 // a given stock symbol, and returns it as a YahooQuote, or returns an error
 // if something goes wrong.
-func GetTicker(symbol string) (*YahooQuote, error) {
+func GetTicker(ctx context.Context, symbol string) (*YahooQuote, error) {
 	params := url.Values{
 		"q": {
 			fmt.Sprintf("select * from yahoo.finance.quotes where symbol=\"%s\"",
@@ -145,15 +147,17 @@ func GetTicker(symbol string) (*YahooQuote, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-	dec := json.NewDecoder(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	var yr YahooResponse
-	if err := dec.Decode(&yr); err != nil {
+	if err := json.Unmarshal(body, &yr); err != nil {
 		return nil, err
 	}
 
+	if yr.Query.Results.Quote == nil {
+		return nil, fmt.Errorf("Bad Yahoo response: %s\n", body)
+	}
 	if len(yr.Query.Results.Quote.LastTradePriceOnly) == 0 {
 		return nil, nil
 	}
-	return &yr.Query.Results.Quote, nil
+	return yr.Query.Results.Quote, nil
 }

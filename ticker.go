@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -101,17 +102,17 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 			return StatusError{http.StatusBadRequest,
 				errors.New("No response URL supplied (Slack bug?)")}
 		}
-		go TickerPoster(opts, responseURL)
+		go TickerPoster(opts, responseURL, req.Context())
 		payload = map[string]interface{}{
 			"response_type": "in_channel",
 		}
 	} else {
-		payload = BuildTickerPayload(opts)
+		payload = BuildTickerPayload(opts, req.Context())
 		if _, ok := payload["attachments"]; !ok {
-			// In the async case, we'd want to deliver this as payload to
-			// the caller, but for immediate-response, we might as well
-			// log this like a normal error and return a more appropriate
-			// HTTP status code.
+			// In the async case, we'd want to deliver this as
+			// payload to the caller, but for immediate-response,
+			// we might as well log this like a normal error and
+			// return a more appropriate HTTP status code.
 			return StatusError{http.StatusInternalServerError,
 				errors.New(payload["text"].(string))}
 		}
@@ -119,9 +120,8 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("Couldn't marshal payload: %v", payload)
 		return StatusError{http.StatusInternalServerError,
-			errors.New("Could not marshal response")}
+			fmt.Errorf("Could not marshal response: %+v", payload)}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonPayload)
@@ -130,13 +130,12 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 
 // BuildTickerPayload formats the requested ticker symbol information into
 // a JSON payload for rendering to the user in Slack.
-func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
+func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interface{} {
 	payload := map[string]interface{}{}
-	quote, err := GetTicker(opts.Symbol)
+	quote, err := GetTicker(ctx, opts.Symbol)
 	if err != nil {
-		payload["text"] = fmt.Sprintf("Ticker symbol lookup failed for `%s`: %s",
-			opts.Symbol, err.Error())
-	} else if err != nil || quote == nil {
+		payload["text"] = err.Error()
+	} else if quote == nil {
 		payload["text"] = fmt.Sprintf("Unknown ticker symbol `%s`", opts.Symbol)
 	} else {
 		var emoji string
@@ -194,14 +193,16 @@ func BuildTickerPayload(opts TickerOpts) map[string]interface{} {
 			"mrkdwn_in": []string{"text", "pretext"},
 		}}
 		payload["response_type"] = "in_channel"
+		log.Printf("[%d] %s %s (%s)\n", RequestID(ctx), quote.Symbol,
+			quote.LastTradePriceOnly, quote.PercentChange)
 	}
 	return payload
 }
 
 // TickerPoster (as a goroutine) collects and formats the requested ticker
 // symbol information, and posts it back to Slack asynchronously.
-func TickerPoster(opts TickerOpts, responseURL string) {
-	payload := BuildTickerPayload(opts)
+func TickerPoster(opts TickerOpts, responseURL string, ctx context.Context) {
+	payload := BuildTickerPayload(opts, ctx)
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Couldn't marshal payload: %v", payload)
@@ -209,16 +210,19 @@ func TickerPoster(opts TickerOpts, responseURL string) {
 	}
 	resp, err := http.Post(responseURL, "application/json", bytes.NewReader(jsonPayload))
 	if err != nil {
-		log.Printf("Failed to post response to '%s': %s\n", responseURL, err.Error())
+		log.Printf("[%d] POST failed for '%s': %s\n", RequestID(ctx),
+			responseURL, err.Error())
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf("Couldn't read from '%s': %s\n", responseURL, err.Error())
+			log.Printf("[%d] Couldn't read from '%s': %s\n",
+				RequestID(ctx), responseURL, err.Error())
 			return
 		}
-		log.Printf("Got %d from %s: %s\n", resp.StatusCode, responseURL, string(body))
+		log.Printf("[%d] Got %d from %s: %s\n", RequestID(ctx),
+			resp.StatusCode, responseURL, string(body))
 	}
 }

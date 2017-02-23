@@ -18,8 +18,12 @@ func TestSlackDispatcher(t *testing.T) {
 		{
 			"POST",
 			url.Values{
-				"token":   {"valid-token"},
-				"command": {"/valid-command"},
+				"token":        {"valid-token"},
+				"command":      {"/valid-command"},
+				"text":         {"arguments"},
+				"user_name":    {"user"},
+				"channel_name": {"channel"},
+				"team_domain":  {"domain"},
 			},
 			false,
 		},
@@ -31,16 +35,24 @@ func TestSlackDispatcher(t *testing.T) {
 		{
 			"POST",
 			url.Values{
-				"token":   {"invalid-token"},
-				"command": {"/valid-command"},
+				"token":        {"invalid-token"},
+				"command":      {"/valid-command"},
+				"text":         {"arguments"},
+				"user_name":    {"user"},
+				"channel_name": {"channel"},
+				"team_domain":  {"domain"},
 			},
 			true,
 		},
 		{
 			"POST",
 			url.Values{
-				"token":   {"valid-token"},
-				"command": {"/invalid-command"},
+				"token":        {"valid-token"},
+				"command":      {"/invalid-command"},
+				"text":         {"arguments"},
+				"user_name":    {"user"},
+				"channel_name": {"channel"},
+				"team_domain":  {"domain"},
 			},
 			true,
 		},
@@ -65,7 +77,8 @@ func TestSlackDispatcher(t *testing.T) {
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		}
 		w := httptest.NewRecorder()
-		err := SlackDispatcher(w, req)
+		ctx := NewContext(req.Context(), req)
+		err := SlackDispatcher(w, req.WithContext(ctx))
 		if test.fail {
 			if err == nil {
 				t.Error(err)

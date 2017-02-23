@@ -12,50 +12,6 @@ import (
 	"strings"
 )
 
-// Error extends the error interface to add HTTP status information.
-type Error interface {
-	error
-	Status() int
-}
-
-// StatusError implements Error, storing both an error and an HTTP status code.
-type StatusError struct {
-	Code int
-	Err  error
-}
-
-// Error returns the text of the returned error.
-func (se StatusError) Error() string { return se.Err.Error() }
-
-// Status returns the HTTP error code of our raised error.
-func (se StatusError) Status() int { return se.Code }
-
-// ErrorHandler extended the Handler interface to include an error return value.
-type ErrorHandler func(http.ResponseWriter, *http.Request) error
-
-// ErrorHandler.ServeHTTP adds logging and error handling to a standard Handler
-func (h ErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if err := h(w, req); err != nil {
-		addr := req.Header.Get("X-Real-IP")
-		if addr == "" {
-			addr = req.Header.Get("X-Forwarded-For")
-			if addr == "" {
-				addr = req.RemoteAddr
-			}
-		}
-		switch e := err.(type) {
-		case Error:
-			log.Printf("%s - HTTP %d - %s", addr, e.Status(), e)
-			http.Error(w, e.Error(), e.Status())
-		default:
-			msg := fmt.Sprintf("%s - %s",
-				http.StatusText(http.StatusInternalServerError),
-				err.Error())
-			http.Error(w, msg, http.StatusInternalServerError)
-		}
-	}
-}
-
 // SlashCommands represents a slack command and a handler for it
 type SlashCommands map[string]ErrorHandler
 
@@ -83,6 +39,13 @@ func SlackDispatcher(w http.ResponseWriter, req *http.Request) error {
 	command := strings.ToLower(req.FormValue("command"))
 
 	if handler, ok := Commands[command]; ok {
+		log.Printf("[%d] %s@%s:%s %s %s",
+			RequestID(req.Context()),
+			req.FormValue("user_name"),
+			req.FormValue("team_domain"),
+			req.FormValue("channel_name"),
+			command,
+			req.FormValue("text"))
 		return handler(w, req)
 	}
 	return StatusError{http.StatusBadRequest,

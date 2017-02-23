@@ -6,6 +6,7 @@ package main
 
 import (
 	"io"
+	"log"
 	"time"
 )
 
@@ -27,6 +28,7 @@ func LoadConfig(configStream io.Reader) (Configuration, error) {
 
 	// Normalize timeout to seconds, because toml lacks duration support
 	config.HTTPClientTimeout = config.HTTPClientTimeout * time.Second
+	log.Printf("Config loaded: %+v\n", config)
 
 	return config, err
 }
