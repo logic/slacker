@@ -80,6 +80,7 @@ func (h ErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			msg := fmt.Sprintf("%s - %s",
 				http.StatusText(http.StatusInternalServerError),
 				err.Error())
+			log.Printf("[%d] %s", rid, msg)
 			http.Error(w, msg, http.StatusInternalServerError)
 		}
 	}

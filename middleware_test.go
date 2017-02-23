@@ -143,7 +143,13 @@ func TestErrorHandlerLoggingErrorFailure(t *testing.T) {
 		t.Errorf("handler status code: got %v, want %v: %s",
 			status, 420, w.Body.String())
 	}
-	expected := "error\n"
+	expected := fmt.Sprintf("[%d] %s - %s %s %s\n[%d] %s\n", currentID,
+		req.RemoteAddr, req.Method, req.URL.RequestURI(), req.Proto,
+		currentID, "error")
+	if str.String() != expected {
+		t.Errorf("expected '%s', got '%s'", expected, str.String())
+	}
+	expected = "error\n"
 	if w.Body.String() != expected {
 		t.Errorf("expected '%s', got '%s'", expected, w.Body.String())
 	}
@@ -156,11 +162,13 @@ func TestErrorHandlerLoggingGeneralFailure(t *testing.T) {
 	log.SetFlags(0)
 	defer log.SetFlags(log.Ldate | log.Ltime)
 
+	msg := "error"
+
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/", nil)
 	ctx := NewContext(req.Context(), req)
 	ridm := ErrorHandler(func(rw http.ResponseWriter, req *http.Request) error {
-		return errors.New("error")
+		return errors.New(msg)
 	})
 	ridm.ServeHTTP(w, req.WithContext(ctx))
 	if status := w.Code; status != http.StatusInternalServerError {
@@ -168,8 +176,14 @@ func TestErrorHandlerLoggingGeneralFailure(t *testing.T) {
 			status, http.StatusInternalServerError,
 			w.Body.String())
 	}
-	expected := fmt.Sprintf("%s - error\n",
-		http.StatusText(http.StatusInternalServerError))
+	http500 := http.StatusText(http.StatusInternalServerError)
+	expected := fmt.Sprintf("[%d] %s - %s %s %s\n[%d] %s - %s\n", currentID,
+		req.RemoteAddr, req.Method, req.URL.RequestURI(), req.Proto,
+		currentID, http500, msg)
+	if str.String() != expected {
+		t.Errorf("expected '%s', got '%s'", expected, str.String())
+	}
+	expected = fmt.Sprintf("%s - %s\n", http500, msg)
 	if w.Body.String() != expected {
 		t.Errorf("expected '%s', got '%s'", expected, w.Body.String())
 	}
