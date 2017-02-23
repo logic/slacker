@@ -7,6 +7,7 @@ package main
 import (
 	"io"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -28,7 +29,20 @@ func LoadConfig(configStream io.Reader) (Configuration, error) {
 
 	// Normalize timeout to seconds, because toml lacks duration support
 	config.HTTPClientTimeout = config.HTTPClientTimeout * time.Second
-	log.Printf("Config loaded: %+v\n", config)
+	log.Println("Configuration loaded:")
+	if len(config.Tokens) > 0 {
+		log.Printf("  Tokens: [<hidden>%s]\n",
+			strings.Repeat(", <hidden>", len(config.Tokens)-1))
+	} else {
+		log.Println("  No tokens defined (accepting all requests)")
+	}
+	log.Printf("  Listening on %s\n", config.ListenAddress)
+	if config.AsyncResponse {
+		log.Println("  Sending responses asynchronously")
+	} else {
+		log.Println("  Sending responses immediately")
+	}
+	log.Printf("  HTTP connections time out in %v\n", config.HTTPClientTimeout)
 
 	return config, err
 }
