@@ -63,8 +63,8 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 		return opts, errors.New(output.String())
 	}
 
-	if flags.NArg() != 1 {
-		if flags.NArg() == 0 {
+	if flags.NArg() != 1 || flags.Arg(0) == "" {
+		if flags.NArg() <= 1 {
 			fmt.Fprintln(&output, "no ticker symbol specified")
 		} else {
 			fmt.Fprintln(&output, "only one ticker symbol at a time")
