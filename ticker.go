@@ -50,7 +50,7 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 	case "1d", "5d", "1m", "3m", "6m", "1y", "2y", "5y", "my":
 		break
 	default:
-		fmt.Fprintln(&output, "time span must be one of 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y, or my")
+		fmt.Fprintln(&output, "*Error:* time span must be one of 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y, or my")
 		flags.Usage()
 		return opts, errors.New(output.String())
 	}
@@ -59,16 +59,16 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 	case "l", "b", "c":
 		break
 	default:
-		fmt.Fprintln(&output, "type must be one of l, b, or c")
+		fmt.Fprintln(&output, "*Error:* type must be one of l, b, or c")
 		flags.Usage()
 		return opts, errors.New(output.String())
 	}
 
 	if flags.NArg() != 1 || flags.Arg(0) == "" {
 		if flags.NArg() <= 1 {
-			fmt.Fprintln(&output, "no ticker symbol specified")
+			fmt.Fprintln(&output, "*Error:* no ticker symbol specified")
 		} else {
-			fmt.Fprintln(&output, "only one ticker symbol at a time")
+			fmt.Fprintln(&output, "*Error:* only one ticker symbol at a time")
 		}
 		flags.Usage()
 		return opts, errors.New(output.String())
@@ -76,7 +76,7 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 
 	opts.Symbol = strings.ToUpper(flags.Arg(0))
 	if regexp.MustCompile(`[^A-Z0-9.]+`).MatchString(opts.Symbol) {
-		return opts, errors.New("Invalid ticker symbol (letters, numbers, and '.' only)")
+		return opts, errors.New("*Error:* Invalid ticker symbol (letters, numbers, and '.' only)")
 	}
 
 	return opts, nil
@@ -136,7 +136,7 @@ func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interfa
 	if err != nil {
 		payload["text"] = err.Error()
 	} else if quote == nil {
-		payload["text"] = fmt.Sprintf("Unknown ticker symbol `%s`", opts.Symbol)
+		payload["text"] = fmt.Sprintf("Unknown ticker symbol _%s_", opts.Symbol)
 	} else {
 		var emoji string
 		var color string
