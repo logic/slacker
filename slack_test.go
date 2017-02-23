@@ -47,7 +47,7 @@ func TestSlackDispatcher(t *testing.T) {
 	}
 	Config = Configuration{
 		Tokens:            []string{"valid-token"},
-		ListenAddress:     "127.0.0.1",
+		ListenAddress:     "127.0.0.1:8080",
 		AsyncResponse:     false,
 		HTTPClientTimeout: time.Duration(10) * time.Second,
 	}
