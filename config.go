@@ -5,6 +5,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"strings"
@@ -13,9 +14,23 @@ import (
 
 import "github.com/BurntSushi/toml"
 
+// Tokens represent an array of Slack connection tokens
+type Tokens []string
+
+func (t *Tokens) String() string {
+	return fmt.Sprintf("%+v", *t)
+}
+
+// Set accepts an additional token and adds it to the list
+func (t *Tokens) Set(v string) error {
+	*t = append(*t, v)
+	return nil
+}
+
 // Configuration represents the fields of a TOML configuration file.
 type Configuration struct {
-	Tokens            []string
+	File              string
+	Tokens            Tokens
 	ListenAddress     string
 	AsyncResponse     bool
 	HTTPClientTimeout time.Duration
@@ -23,8 +38,7 @@ type Configuration struct {
 
 // LoadConfig sets our configuration defaults, and loads a configuration from
 // the TOML-formatted configuration file over the defaults.
-func LoadConfig(configStream io.Reader) (Configuration, error) {
-	config := Configuration{nil, "0.0.0.0:8888", false, 0}
+func LoadConfig(config *Configuration, configStream io.Reader) error {
 	_, err := toml.DecodeReader(configStream, &config)
 
 	// Normalize timeout to seconds, because toml lacks duration support
@@ -44,5 +58,5 @@ func LoadConfig(configStream io.Reader) (Configuration, error) {
 	}
 	log.Printf("  HTTP connections time out in %v\n", config.HTTPClientTimeout)
 
-	return config, err
+	return err
 }
