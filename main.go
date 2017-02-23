@@ -16,7 +16,11 @@ var Config Configuration
 // Commands are any Slack commands that we recognize, and their handlers
 var Commands SlashCommands
 
+var version string = "development version"
+var timestamp string = "unknown"
+
 func main() {
+	log.Printf("Starting slacker %s (build date %s)\n", version, timestamp)
 	f, err := os.Open("slack.toml")
 	if err != nil {
 		log.Fatal("Could not open slack.toml: ", err)

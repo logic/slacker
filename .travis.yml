@@ -8,39 +8,40 @@ install:
 
 script:
   - go test -v ./...
-  - env GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_386.tar.gz slacker
-  - env GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_amd64.tar.gz slacker
-  - env GOOS=dragonfly GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.dragonfly_amd64.tar.gz slacker
-  - env GOOS=freebsd GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_386.tar.gz slacker
-  - env GOOS=freebsd GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_amd64.tar.gz slacker
-  - env GOOS=freebsd GOARCH=arm GOARM=6 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_armv6.tar.gz slacker
-  - env GOOS=freebsd GOARCH=arm GOARM=7 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_armv7.tar.gz slacker
-  - env GOOS=freebsd GOARCH=arm go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_armv8.tar.gz slacker
-  - env GOOS=linux GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_386.tar.gz slacker
-  - env GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_amd64.tar.gz slacker
-  - env GOOS=linux GOARCH=arm GOARM=5 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv5.tar.gz slacker
-  - env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv6.tar.gz slacker
-  - env GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv7.tar.gz slacker
-  - env GOOS=linux GOARCH=arm go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv8.tar.gz slacker
-  - env GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_arm64.tar.gz slacker
-  - env GOOS=linux GOARCH=mips64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_mips64.tar.gz slacker
-  - env GOOS=linux GOARCH=mips64le go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_mips64le.tar.gz slacker
-  - env GOOS=linux GOARCH=ppc64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_ppc64.tar.gz slacker
-  - env GOOS=linux GOARCH=ppc64le go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_ppc64le.tar.gz slacker
-  - env GOOS=linux GOARCH=s390x go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_s390x.tar.gz slacker
-  - env GOOS=netbsd GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_386.tar.gz slacker
-  - env GOOS=netbsd GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_amd64.tar.gz slacker
-  - env GOOS=netbsd GOARCH=arm GOARM=6 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_armv6.tar.gz slacker
-  - env GOOS=netbsd GOARCH=arm GOARM=7 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_armv7.tar.gz slacker
-  - env GOOS=netbsd GOARCH=arm go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_armv8.tar.gz slacker
-  - env GOOS=openbsd GOARCH=386 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_386.tar.gz slacker
-  - env GOOS=openbsd GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_amd64.tar.gz slacker
-  - env GOOS=openbsd GOARCH=arm GOARM=6 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_armv6.tar.gz slacker
-  - env GOOS=openbsd GOARCH=arm GOARM=7 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_armv7.tar.gz slacker
-  - env GOOS=openbsd GOARCH=arm go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_arm.tar.gz slacker
-  - env GOOS=solaris GOARCH=amd64 go build -ldflags="-s -w" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.solaris_amd64.tar.gz slacker
-  - env GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -9 slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_386.zip slacker
-  - env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -9 slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_amd64.zip slacker
+  - export GO_LDFLAGS="-s -w -X \"main.timestamp=$(date +%Y-%m-%dT%H:%M:%S%z)\" -X \"main.version=${TRAVIS_TAG:-$TRAVIS_COMMIT}\""
+  - env GOOS=darwin GOARCH=386 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_386.tar.gz slacker
+  - env GOOS=darwin GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.darwin_amd64.tar.gz slacker
+  - env GOOS=dragonfly GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.dragonfly_amd64.tar.gz slacker
+  - env GOOS=freebsd GOARCH=386 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_386.tar.gz slacker
+  - env GOOS=freebsd GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_amd64.tar.gz slacker
+  - env GOOS=freebsd GOARCH=arm GOARM=6 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_armv6.tar.gz slacker
+  - env GOOS=freebsd GOARCH=arm GOARM=7 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_armv7.tar.gz slacker
+  - env GOOS=freebsd GOARCH=arm go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.freebsd_armv8.tar.gz slacker
+  - env GOOS=linux GOARCH=386 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_386.tar.gz slacker
+  - env GOOS=linux GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_amd64.tar.gz slacker
+  - env GOOS=linux GOARCH=arm GOARM=5 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv5.tar.gz slacker
+  - env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv6.tar.gz slacker
+  - env GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv7.tar.gz slacker
+  - env GOOS=linux GOARCH=arm go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_armv8.tar.gz slacker
+  - env GOOS=linux GOARCH=arm64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_arm64.tar.gz slacker
+  - env GOOS=linux GOARCH=mips64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_mips64.tar.gz slacker
+  - env GOOS=linux GOARCH=mips64le go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_mips64le.tar.gz slacker
+  - env GOOS=linux GOARCH=ppc64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_ppc64.tar.gz slacker
+  - env GOOS=linux GOARCH=ppc64le go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_ppc64le.tar.gz slacker
+  - env GOOS=linux GOARCH=s390x go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.linux_s390x.tar.gz slacker
+  - env GOOS=netbsd GOARCH=386 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_386.tar.gz slacker
+  - env GOOS=netbsd GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_amd64.tar.gz slacker
+  - env GOOS=netbsd GOARCH=arm GOARM=6 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_armv6.tar.gz slacker
+  - env GOOS=netbsd GOARCH=arm GOARM=7 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_armv7.tar.gz slacker
+  - env GOOS=netbsd GOARCH=arm go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.netbsd_armv8.tar.gz slacker
+  - env GOOS=openbsd GOARCH=386 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_386.tar.gz slacker
+  - env GOOS=openbsd GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_amd64.tar.gz slacker
+  - env GOOS=openbsd GOARCH=arm GOARM=6 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_armv6.tar.gz slacker
+  - env GOOS=openbsd GOARCH=arm GOARM=7 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_armv7.tar.gz slacker
+  - env GOOS=openbsd GOARCH=arm go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.openbsd_arm.tar.gz slacker
+  - env GOOS=solaris GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" && tar czvf slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.solaris_amd64.tar.gz slacker
+  - env GOOS=windows GOARCH=386 go build -ldflags="${GO_LDFLAGS}" -o slacker.exe && zip -9 slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_386.zip slacker.exe
+  - env GOOS=windows GOARCH=amd64 go build -ldflags="${GO_LDFLAGS}" -o slacker.exe && zip -9 slacker-${TRAVIS_TAG:-$TRAVIS_COMMIT}.windows_amd64.zip slacker.exe
 
 go:
   - 1.8.x
