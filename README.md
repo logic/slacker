@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/logic/slacker.svg?branch=master)](https://travis-ci.org/logic/slacker/)
+
 Slacker is Copyright 2015, 2016, 2017 Ed Marshall. All rights reserved. Use of
 this source code is goverened by the terms of the GNU General Public License,
 either version 3, or (at your option) any later version; please see the file
