@@ -130,7 +130,7 @@ func GetTicker(symbol string) (*YahooQuote, error) {
 		},
 		"format":      {"json"},
 		"diagnostics": {"false"},
-		"env":         {"http://datatables.org/alltables.env"},
+		"env":         {"store://datatables.org/alltableswithkeys"},
 		"callback":    {""},
 	}
 
