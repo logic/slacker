@@ -50,11 +50,13 @@ script:
   - export PKGCMD="${PKGCMD:-tar zcvf}"
   - export PKGEXT="${PKGEXT:-.tar.gz}"
   - export PKG="slacker-${VER}.${GOOS}_${GOARCH}${GOARM:+v${GOARM}}.${PKGEXT}"
-  - if [[ $GOOS = "linux" || $GOARCH = "amd64" ]]; then go test -v ./...; fi
+  - go test -v ./...
   - go build
     -ldflags="-s -w -X \"main.timestamp=${TIME}\" -X \"main.version=${VER}\""
     -o "slacker${EXT}"
   - $PKGCMD "${PKG}" "slacker${EXT}"
+  - ls -l "slacker${EXT}" "${PKG}"
+  - sha256sum "${PKG}"
 
 deploy:
   provider: releases
