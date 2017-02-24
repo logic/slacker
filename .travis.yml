@@ -58,8 +58,8 @@ script:
     env | sort;
     echo 'travis_fold:end:ENV'
   - echo 'travis_fold:start:TEST';
-    go test -v ./...;
-    echo 'travis_fold:end:TEST'
+    if [[ $GOOS = linux && $GOARCH = amd64 ]];then go test -v ./...; fi
+  - echo 'travis_fold:end:TEST'
   - go build
     -ldflags="-s -w -X \"main.timestamp=${TIME}\" -X \"main.version=${VER}\""
     -o "slacker${EXT}"
