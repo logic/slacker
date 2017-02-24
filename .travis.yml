@@ -42,7 +42,11 @@ install:
   - go get -t -v ./...
 
 script:
-  - test "${GOOS}" = "linux" -a "${GOARCH}" = "amd64" && go test -v ./...
+  - |
+    if [[ $GOOS = "linux" -a $GOARCH = "amd64" ]]
+    then
+        go test -v ./...
+    fi
   - export SVER="${TRAVIS_TAG:-$TRAVIS_COMMIT}"
   - export PKGCMD="${PKGCMD:-tar zcvf}"
   - export PKGEXT="${PKGEXT:-.tar.gz}"
