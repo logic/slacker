@@ -45,19 +45,21 @@ install:
   - go get -t -v ./...
 
 script:
-  - export GOOS="${MY_GOOS}"
-  - export GOARCH="${MY_GOARCH}"
-  - export TIME="$(date +%Y-%m-%dT%H:%M:%S%z)"
-  - export VER="${TRAVIS_TAG:-$TRAVIS_COMMIT}"
-  - export PKGCMD="${PKGCMD:-tar zcvf}"
-  - export PKGEXT="${PKGEXT:-.tar.gz}"
-  - export PKG="slacker-${VER}.${GOOS}_${GOARCH}${GOARM:+v${GOARM}}.${PKGEXT}"
-  - echo "travis_fold:start:ENV"
-  - env
-  - echo "travis_fold:end:ENV"
-  - echo "travis_fold:start:TEST"
-  - go test -v ./...
-  - echo "travis_fold:end:TEST"
+  - echo 'travis_fold:start:PREENV';
+    export GOOS="${MY_GOOS}";
+    export GOARCH="${MY_GOARCH}";
+    export TIME="$(date +%Y-%m-%dT%H:%M:%S%z)";
+    export VER="${TRAVIS_TAG:-$TRAVIS_COMMIT}";
+    export PKGCMD="${PKGCMD:-tar zcvf}";
+    export PKGEXT="${PKGEXT:-.tar.gz}";
+    export PKG="slacker-${VER}.${GOOS}_${GOARCH}${GOARM:+v${GOARM}}${PKGEXT}";
+    echo 'travis_fold:end:PREENV';
+  - echo 'travis_fold:start:ENV';
+    env | sort;
+    echo 'travis_fold:end:ENV'
+  - echo 'travis_fold:start:TEST';
+    go test -v ./...;
+    echo 'travis_fold:end:TEST'
   - go build
     -ldflags="-s -w -X \"main.timestamp=${TIME}\" -X \"main.version=${VER}\""
     -o "slacker${EXT}"
