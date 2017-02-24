@@ -1,7 +1,10 @@
 ---
+os: linux
+
 language: go
 
-os: linux
+go:
+  - 1.8.x
 
 env:
   - GOOS=darwin GOARCH=386
@@ -42,24 +45,16 @@ install:
   - go get -t -v ./...
 
 script:
-  - |
-    if [[ $GOOS = "linux" || $GOARCH = "amd64" ]]
-    then
-        go test -v ./...
-    fi
-  - export SVER="${TRAVIS_TAG:-$TRAVIS_COMMIT}"
+  - export TIME="$(date +%Y-%m-%dT%H:%M:%S%z)"
+  - export VER="${TRAVIS_TAG:-$TRAVIS_COMMIT}"
   - export PKGCMD="${PKGCMD:-tar zcvf}"
   - export PKGEXT="${PKGEXT:-.tar.gz}"
-  - export PKG="slacker-${SVER}.${GOOS}_${GOARCH}${GOARM:+v${GOARM}}.${PKGEXT}"
-  - go build -ldflags="-s -w -X \"main.timestamp=$(date +%Y-%m-%dT%H:%M:%S%z)\"
-    -X \"main.version=${SVER}\"" -o "slacker${EXT}"
+  - export PKG="slacker-${VER}.${GOOS}_${GOARCH}${GOARM:+v${GOARM}}.${PKGEXT}"
+  - if [[ $GOOS = "linux" || $GOARCH = "amd64" ]] then go test -v ./...; fi
+  - go build
+    -ldflags="-s -w -X \"main.timestamp=${TIME}\" -X \"main.version=${VER}\""
+    -o "slacker${EXT}"
   - $PKGCMD "${PKG}" "slacker${EXT}"
-
-go:
-  - 1.8.x
-
-before_deploy:
-  - sha256sum slacker-*.tar.gz slacker-*.zip > "slacker-${SVER}.sha256sum.txt"
 
 deploy:
   provider: releases
@@ -77,10 +72,7 @@ deploy:
         VsmA2Rg8bdoNyeabJcu/vjM0FalMsyVeIIIP4egpIo0rmniZI2Y1+NGlqAqkR8=
   skip_cleanup: true
   file_glob: true
-  file:
-    - "slacker-*.sha256sum.txt"
-    - "slacker-*.tar.gz"
-    - "slacker-*.zip"
+  file: ${PKG}
   "on":
     repo: logic/slacker
     tags: true
