@@ -43,7 +43,7 @@ install:
 
 script:
   - |
-    if [[ $GOOS = "linux" -a $GOARCH = "amd64" ]]
+    if [[ $GOOS = "linux" || $GOARCH = "amd64" ]]
     then
         go test -v ./...
     fi
