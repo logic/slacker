@@ -132,16 +132,20 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 // a JSON payload for rendering to the user in Slack.
 func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interface{} {
 	payload := map[string]interface{}{}
-	quote, err := GetTicker(ctx, opts.Symbol)
+	quotes, err := GetTickers([]string{opts.Symbol}, []TickerOption{
+		TOSymbol, TOName, TOLastTradeDate, TOLastTradePriceOnly,
+		TOLastTradeTime, TOChangeinPercent, TOPreviousClose,
+	})
+	quote := quotes[0]
 	if err != nil {
 		payload["text"] = err.Error()
-	} else if quote == nil {
+	} else if quote[TOLastTradePriceOnly] == "N/A" {
 		payload["text"] = fmt.Sprintf("Unknown ticker symbol _%s_", opts.Symbol)
 	} else {
 		var emoji string
 		var color string
-		if len(quote.PercentChange) != 0 {
-			if quote.PercentChange[0] == '-' {
+		if len(quote[TOChangeinPercent]) != 0 {
+			if quote[TOChangeinPercent][0] == '-' {
 				emoji = ":chart_with_downwards_trend:"
 				color = "danger"
 			} else {
@@ -154,16 +158,16 @@ func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interfa
 		}
 
 		var name string
-		if len(quote.Name) != 0 {
-			name = fmt.Sprintf("%s - %s", quote.Symbol, quote.Name)
+		if len(quote[TOName]) != 0 {
+			name = fmt.Sprintf("%s - %s", quote[TOSymbol], quote[TOName])
 		} else {
-			name = quote.Symbol
+			name = quote[TOSymbol]
 		}
 
 		var change string
-		if len(quote.PercentChange) != 0 && len(quote.PreviousClose) != 0 {
+		if len(quote[TOChangeinPercent]) != 0 && len(quote[TOPreviousClose]) != 0 {
 			change = fmt.Sprintf("_(%s from previous close of %s)_ ",
-				quote.PercentChange, quote.PreviousClose)
+				quote[TOChangeinPercent], quote[TOPreviousClose])
 		} else {
 			change = ""
 		}
@@ -177,24 +181,24 @@ func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interfa
 
 		payload["attachments"] = []map[string]interface{}{{
 			"fallback": fmt.Sprintf("%s: %s %sas of %s %s",
-				name, quote.LastTradePriceOnly, change,
-				quote.LastTradeTime, quote.LastTradeDate),
+				name, quote[TOLastTradePriceOnly], change,
+				quote[TOLastTradeTime], quote[TOLastTradeDate]),
 			"pretext": fmt.Sprintf("%s *<https://finance.yahoo.com/q?s=%s|%s>*",
-				emoji, quote.Symbol, name),
+				emoji, quote[TOSymbol], name),
 			"text": fmt.Sprintf("*%s* %s\n%s %s",
-				quote.LastTradePriceOnly, change,
-				quote.LastTradeTime, quote.LastTradeDate),
+				quote[TOLastTradePriceOnly], change,
+				quote[TOLastTradeTime], quote[TOLastTradeDate]),
 			"color": color,
 			// The "fresh" parameter is non-standard, but is used
 			// to defeat any caching here.
 			"image_url": fmt.Sprintf(
 				"https://chart.finance.yahoo.com/z?s=%s&&z=s&t=%s&q=%s&l=%s&fresh=%d",
-				quote.Symbol, opts.Span, opts.Type, scale, time.Now().Unix()),
+				quote[TOSymbol], opts.Span, opts.Type, scale, time.Now().Unix()),
 			"mrkdwn_in": []string{"text", "pretext"},
 		}}
 		payload["response_type"] = "in_channel"
-		log.Printf("[%d] %s %s (%s)\n", RequestID(ctx), quote.Symbol,
-			quote.LastTradePriceOnly, quote.PercentChange)
+		log.Printf("[%d] %s %s (%s)\n", RequestID(ctx), quote[TOSymbol],
+			quote[TOLastTradePriceOnly], quote[TOChangeinPercent])
 	}
 	return payload
 }
