@@ -18,6 +18,7 @@ func TestSlackDispatcher(t *testing.T) {
 		method string
 		form   url.Values
 		fail   bool
+		output string
 	}{
 		{
 			"POST",
@@ -30,11 +31,26 @@ func TestSlackDispatcher(t *testing.T) {
 				"team_domain":  {"domain"},
 			},
 			false,
+			"",
+		},
+		{
+			"POST",
+			url.Values{
+				"token":        {"valid-token"},
+				"command":      {"/valid-command"},
+				"text":         {"-version"},
+				"user_name":    {"user"},
+				"channel_name": {"channel"},
+				"team_domain":  {"domain"},
+			},
+			false,
+			versionString(),
 		},
 		{
 			"GET",
 			nil,
 			true,
+			"",
 		},
 		{
 			"POST",
@@ -47,6 +63,7 @@ func TestSlackDispatcher(t *testing.T) {
 				"team_domain":  {"domain"},
 			},
 			true,
+			"",
 		},
 		{
 			"POST",
@@ -59,6 +76,7 @@ func TestSlackDispatcher(t *testing.T) {
 				"team_domain":  {"domain"},
 			},
 			true,
+			"",
 		},
 	}
 	Config = Configuration{
@@ -85,7 +103,7 @@ func TestSlackDispatcher(t *testing.T) {
 		err := SlackDispatcher(w, req.WithContext(ctx))
 		if test.fail {
 			if err == nil {
-				t.Error(err)
+				t.Errorf("Unexpected success for %v", test)
 			}
 		} else {
 			if err != nil {
@@ -94,6 +112,10 @@ func TestSlackDispatcher(t *testing.T) {
 			if w.Code != 200 {
 				t.Error("SlackDispatcher failure code:", w.Code)
 			}
+		}
+		if test.output != w.Body.String() {
+			t.Errorf("SlackDispatcher returned `%s`, expected `%s`",
+				w.Body.String(), test.output)
 		}
 	}
 }

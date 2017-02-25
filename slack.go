@@ -36,8 +36,14 @@ func SlackDispatcher(w http.ResponseWriter, req *http.Request) error {
 				fmt.Errorf("Token '%s' is invalid", token)}
 		}
 	}
-	command := strings.ToLower(req.FormValue("command"))
 
+	// All commands take a short-circuit "-version" argument.
+	if req.FormValue("text") == "-version" {
+		fmt.Fprint(w, versionString())
+		return nil
+	}
+
+	command := strings.ToLower(req.FormValue("command"))
 	if handler, ok := Commands[command]; ok {
 		log.Printf("[%d] %s@%s:%s %s %s",
 			RequestID(req.Context()),
