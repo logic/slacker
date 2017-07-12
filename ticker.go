@@ -82,37 +82,42 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 
 // Ticker is the handler for the "/ticker" Slack slash command.
 func Ticker(w http.ResponseWriter, req *http.Request) error {
+	var payload map[string]interface{}
+
 	opts, err := ParseTickerCommand(req.FormValue("text"))
 	if err != nil {
-		return StatusError{http.StatusBadRequest, err}
-	}
-
-	// We can either do responses in-line, if we think we can get it done
-	// in time before the Slack timeout. However, if we think the response
-	// will take too long, we can send the response asynchronously; the
-	// downside, though, is that we have to display the original "/ticker
-	// foo" command regardless of whether the lookup was successful,
-	// because we have to decide whether to show it here.
-	var payload map[string]interface{}
-	if Config.AsyncResponse {
-		responseURL := req.FormValue("response_url")
-		if len(responseURL) == 0 {
-			return StatusError{http.StatusBadRequest,
-				errors.New("No response URL supplied (Slack bug?)")}
-		}
-		go TickerPoster(opts, responseURL, req.Context())
 		payload = map[string]interface{}{
-			"response_type": "in_channel",
+			"response_type": "ephemeral",
+			"text":          err.Error(),
 		}
 	} else {
-		payload = BuildTickerPayload(opts, req.Context())
-		if _, ok := payload["attachments"]; !ok {
-			// In the async case, we'd want to deliver this as
-			// payload to the caller, but for immediate-response,
-			// we might as well log this like a normal error and
-			// return a more appropriate HTTP status code.
-			return StatusError{http.StatusInternalServerError,
-				errors.New(payload["text"].(string))}
+
+		// We can either do responses in-line, if we think we can get it done
+		// in time before the Slack timeout. However, if we think the response
+		// will take too long, we can send the response asynchronously; the
+		// downside, though, is that we have to display the original "/ticker
+		// foo" command regardless of whether the lookup was successful,
+		// because we have to decide whether to show it here.
+		if Config.AsyncResponse {
+			responseURL := req.FormValue("response_url")
+			if len(responseURL) == 0 {
+				return StatusError{http.StatusBadRequest,
+					errors.New("No response URL supplied (Slack bug?)")}
+			}
+			go TickerPoster(opts, responseURL, req.Context())
+			payload = map[string]interface{}{
+				"response_type": "in_channel",
+			}
+		} else {
+			payload = BuildTickerPayload(opts, req.Context())
+			if _, ok := payload["attachments"]; !ok {
+				// In the async case, we'd want to deliver this as
+				// payload to the caller, but for immediate-response,
+				// we might as well log this like a normal error and
+				// return a more appropriate HTTP status code.
+				return StatusError{http.StatusInternalServerError,
+					errors.New(payload["text"].(string))}
+			}
 		}
 	}
 
