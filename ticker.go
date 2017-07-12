@@ -15,16 +15,18 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // TickerOpts represnts a set of parsed /ticker command options.
 type TickerOpts struct {
-	Symbol string
-	Span   string
-	Type   string
-	Log    bool
+	Symbol   string
+	Period   string
+	Interval int
+	Type     string
+	Log      bool
 }
 
 // ParseTickerCommand takes the /ticker command line and parses it into
@@ -38,28 +40,24 @@ func ParseTickerCommand(cmd string) (TickerOpts, error) {
 		flags.PrintDefaults()
 	}
 	flags.SetOutput(&output)
-	flags.StringVar(&opts.Span, "span", "1d", "timespan of chart [1d|5d|1m|3m|6m|1y|2y|5y|my]")
-	flags.StringVar(&opts.Type, "type", "l", "type of chart: line, bar, or candle [l|b|c]")
-	flags.BoolVar(&opts.Log, "log", true, "use log scale [true|false]")
+	flags.StringVar(&opts.Period, "period", "1d", "period [xd|xY]")
+	flags.IntVar(&opts.Interval, "interval", 60, "interval [seconds]")
+
 	if err := flags.Parse(strings.Split(cmd, " ")); err != nil {
 		fmt.Fprintln(&output, err)
 		return opts, errors.New(output.String())
 	}
 
-	switch opts.Span {
-	case "1d", "5d", "1m", "3m", "6m", "1y", "2y", "5y", "my":
-		break
-	default:
-		fmt.Fprintln(&output, "*Error:* time span must be one of 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y, or my")
+	if value, err := strconv.Atoi(opts.Period[0 : len(opts.Period)-1]); value == 0 || err != nil {
+		fmt.Fprintln(&output, "*Error:* period must be a positive number (followed by [d|Y])")
 		flags.Usage()
 		return opts, errors.New(output.String())
 	}
-
-	switch opts.Type {
-	case "l", "b", "c":
+	switch opts.Period[len(opts.Period)-1] {
+	case 'd', 'Y':
 		break
 	default:
-		fmt.Fprintln(&output, "*Error:* type must be one of l, b, or c")
+		fmt.Fprintln(&output, "*Error:* period must be one of 'd' (days) or 'Y' (years)")
 		flags.Usage()
 		return opts, errors.New(output.String())
 	}
@@ -172,13 +170,6 @@ func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interfa
 			change = ""
 		}
 
-		var scale string
-		if opts.Log {
-			scale = "on"
-		} else {
-			scale = "off"
-		}
-
 		payload["attachments"] = []map[string]interface{}{{
 			"fallback": fmt.Sprintf("%s: %s %sas of %s %s",
 				name, quote[TOLastTradePriceOnly], change,
@@ -192,8 +183,9 @@ func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interfa
 			// The "fresh" parameter is non-standard, but is used
 			// to defeat any caching here.
 			"image_url": fmt.Sprintf(
-				"https://chart.finance.yahoo.com/z?s=%s&&z=s&t=%s&q=%s&l=%s&fresh=%d",
-				quote[TOSymbol], opts.Span, opts.Type, scale, time.Now().Unix()),
+				"https://www.google.com/finance/getchart?q=%s&x=%s&p=%s&i=%d&fresh=%d",
+				quote[TOSymbol], quote[TOStockExchange],
+				opts.Period, opts.Interval, time.Now().Unix()),
 			"mrkdwn_in": []string{"text", "pretext"},
 		}}
 		payload["response_type"] = "in_channel"

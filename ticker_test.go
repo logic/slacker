@@ -30,71 +30,43 @@ func TestParseTickerCommand(t *testing.T) {
 			valid: false,
 		},
 		{
-			input: "-span=1d X",
+			input: "-period=1d X",
 			valid: true,
 		},
 		{
-			input: "-span=5d X",
+			input: "-period=5d X",
 			valid: true,
 		},
 		{
-			input: "-span=1m X",
+			input: "-period=1Y X",
 			valid: true,
 		},
 		{
-			input: "-span=3m X",
+			input: "-period=5Y X",
 			valid: true,
 		},
 		{
-			input: "-span=6m X",
-			valid: true,
-		},
-		{
-			input: "-span=1y X",
-			valid: true,
-		},
-		{
-			input: "-span=2y X",
-			valid: true,
-		},
-		{
-			input: "-span=5y X",
-			valid: true,
-		},
-		{
-			input: "-span=my X",
-			valid: true,
-		},
-		{
-			input: "-span=X X",
+			input: "-period=0 X",
 			valid: false,
 		},
 		{
-			input: "-type=l X",
-			valid: true,
-		},
-		{
-			input: "-type=b X",
-			valid: true,
-		},
-		{
-			input: "-type=c X",
-			valid: true,
-		},
-		{
-			input: "-type=X X",
+			input: "-period=0d X",
 			valid: false,
 		},
 		{
-			input: "-log=true X",
+			input: "-period=0Y X",
+			valid: false,
+		},
+		{
+			input: "-period=X X",
+			valid: false,
+		},
+		{
+			input: "-interval 0 X",
 			valid: true,
 		},
 		{
-			input: "-log=false X",
-			valid: true,
-		},
-		{
-			input: "-log=X X",
+			input: "-interval X X",
 			valid: false,
 		},
 	}
