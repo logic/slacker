@@ -188,7 +188,7 @@ func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interfa
 			// The "fresh" parameter is non-standard, but is used
 			// to defeat any caching here.
 			"image_url": fmt.Sprintf(
-				"https://www.google.com/finance/getchart?q=%s&x=%s&p=%s&i=%d&fresh=%d",
+				"https://finance.google.com/finance/getchart?q=%s&x=%s&p=%s&i=%d&fresh=%d",
 				quote[TOSymbol], quote[TOStockExchange],
 				opts.Period, opts.Interval, time.Now().Unix()),
 			"mrkdwn_in": []string{"text", "pretext"},
