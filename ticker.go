@@ -135,67 +135,74 @@ func Ticker(w http.ResponseWriter, req *http.Request) error {
 // a JSON payload for rendering to the user in Slack.
 func BuildTickerPayload(opts TickerOpts, ctx context.Context) map[string]interface{} {
 	payload := map[string]interface{}{}
-	quotes, err := GetTickers([]string{opts.Symbol}, []TickerOption{
-		TOSymbol, TOName, TOLastTradeDate, TOLastTradePriceOnly,
-		TOLastTradeTime, TOChangeinPercent, TOPreviousClose,
-	})
-	quote := quotes[0]
+	quotes, err := GetTickers([]string{opts.Symbol})
 	if err != nil {
-		payload["text"] = err.Error()
-	} else if quote[TOLastTradePriceOnly] == "N/A" {
+		log.Printf("[%d] Error: %s\n", RequestID(ctx), err)
+		payload["text"] = fmt.Sprintf("An error occurred looking up _%s_", opts.Symbol)
+	} else if (quotes == nil) || len(quotes) == 0 {
 		payload["text"] = fmt.Sprintf("Unknown ticker symbol _%s_", opts.Symbol)
 	} else {
-		var emoji string
-		var color string
-		if len(quote[TOChangeinPercent]) != 0 {
-			if quote[TOChangeinPercent][0] == '-' {
+		quote := quotes[0]
+		if err != nil {
+			payload["text"] = err.Error()
+		} else {
+			var emoji string
+			var color string
+			if quote.RegularMarketChange < 0 {
 				emoji = ":chart_with_downwards_trend:"
 				color = "danger"
-			} else {
+			} else if quote.RegularMarketChange > 0 {
 				emoji = ":chart_with_upwards_trend:"
 				color = "good"
+			} else {
+				emoji = ":bar_chart:"
+				color = "warning"
 			}
-		} else {
-			emoji = ":bar_chart:"
-			color = "warning"
-		}
 
-		var name string
-		if len(quote[TOName]) != 0 {
-			name = fmt.Sprintf("%s - %s", quote[TOSymbol], quote[TOName])
-		} else {
-			name = quote[TOSymbol]
-		}
+			var name string
+			if len(quote.LongName) != 0 {
+				name = fmt.Sprintf("%s - %s", quote.Symbol, quote.LongName)
+			} else {
+				name = quote.Symbol
+			}
 
-		var change string
-		if len(quote[TOChangeinPercent]) != 0 && len(quote[TOPreviousClose]) != 0 {
-			change = fmt.Sprintf("_(%s from previous close of %s)_ ",
-				quote[TOChangeinPercent], quote[TOPreviousClose])
-		} else {
-			change = ""
-		}
+			var upDown string
+			if quote.RegularMarketChange < 0 {
+				upDown = fmt.Sprintf("down %0.2f%%",
+					quote.RegularMarketChangePercent*(-1))
+			} else if quote.RegularMarketChange > 0 {
+				upDown = fmt.Sprintf("up %0.2f%%",
+					quote.RegularMarketChangePercent)
+			} else {
+				upDown = "unchanged"
+			}
 
-		payload["attachments"] = []map[string]interface{}{{
-			"fallback": fmt.Sprintf("%s: %s %sas of %s %s",
-				name, quote[TOLastTradePriceOnly], change,
-				quote[TOLastTradeTime], quote[TOLastTradeDate]),
-			"pretext": fmt.Sprintf("%s *<https://finance.yahoo.com/q?s=%s|%s>*",
-				emoji, quote[TOSymbol], name),
-			"text": fmt.Sprintf("*%s* %s\n%s %s",
-				quote[TOLastTradePriceOnly], change,
-				quote[TOLastTradeTime], quote[TOLastTradeDate]),
-			"color": color,
-			// The "fresh" parameter is non-standard, but is used
-			// to defeat any caching here.
-			"image_url": fmt.Sprintf(
-				"https://finance.google.com/finance/getchart?q=%s&x=%s&p=%s&i=%d&fresh=%d",
-				quote[TOSymbol], quote[TOStockExchange],
-				opts.Period, opts.Interval, time.Now().Unix()),
-			"mrkdwn_in": []string{"text", "pretext"},
-		}}
-		payload["response_type"] = "in_channel"
-		log.Printf("[%d] %s %s (%s)\n", RequestID(ctx), quote[TOSymbol],
-			quote[TOLastTradePriceOnly], quote[TOChangeinPercent])
+			price := quote.RegularMarketPrice
+
+			change := fmt.Sprintf("_(%s from previous close of $%0.2f)_ ",
+				upDown, quote.RegularMarketPreviousClose)
+
+			asOf := time.Unix(quote.RegularMarketTime, 0).Format(time.RFC822)
+
+			payload["attachments"] = []map[string]interface{}{{
+				"fallback": fmt.Sprintf("%s: $%0.2f %sas of %s",
+					name, price, change, asOf),
+				"pretext": fmt.Sprintf("%s *<https://finance.yahoo.com/q?s=%s|%s>*",
+					emoji, quote.Symbol, name),
+				"text":  fmt.Sprintf("*$%0.2f* %s\n%s", price, change, asOf),
+				"color": color,
+				// The "fresh" parameter is non-standard, but is used
+				// to defeat any caching here.
+				"image_url": fmt.Sprintf(
+					"https://finance.google.com/finance/getchart?q=%s&p=%s&i=%d&fresh=%d",
+					quote.Symbol,
+					opts.Period, opts.Interval, time.Now().Unix()),
+				"mrkdwn_in": []string{"text", "pretext"},
+			}}
+			payload["response_type"] = "in_channel"
+			log.Printf("[%d] %s $%0.2f (%s)\n", RequestID(ctx),
+				quote.Symbol, price, change)
+		}
 	}
 	return payload
 }

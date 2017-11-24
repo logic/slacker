@@ -5,127 +5,107 @@
 package main
 
 import (
-	"encoding/csv"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
-	"unsafe"
 )
 
-var apiYahooFinance = "https://download.finance.yahoo.com/d/quotes.csv"
+var apiYahooFinance = "https://query1.finance.yahoo.com/v7/finance/quote"
 
-// TickerOption represents a single piece of available information about a
-// ticker symbol.
-type TickerOption string
-
-// TickerResults is an array of individual ticker lookup results, each
-// formatted as a mapping of a TickerOption to the retreived string value.
-type TickerResults []map[TickerOption]string
-
-// The full list of TickerOption values
-const (
-	TOAsk                                            TickerOption = "a"
-	TOAverageDailyVolume                             TickerOption = "a2"
-	TOBid                                            TickerOption = "b"
-	TOAskRealtime                                    TickerOption = "b2"
-	TOBidRealtime                                    TickerOption = "b3"
-	TOBookValue                                      TickerOption = "b4"
-	TOChangeAndPercentChange                         TickerOption = "c"
-	TOChange                                         TickerOption = "c1"
-	TOCommission                                     TickerOption = "c3"
-	TOCurrency                                       TickerOption = "c4"
-	TOChangeRealtime                                 TickerOption = "c6"
-	TOAfterHoursChangeRealtime                       TickerOption = "c8"
-	TODividendShare                                  TickerOption = "d"
-	TOLastTradeDate                                  TickerOption = "d1"
-	TOTradeDate                                      TickerOption = "d2"
-	TOEarningsShare                                  TickerOption = "e"
-	TOErrorIndicationreturnedforsymbolchangedinvalid TickerOption = "e1"
-	TOEPSEstimateCurrentYear                         TickerOption = "e7"
-	TOEPSEstimateNextYear                            TickerOption = "e8"
-	TOEPSEstimateNextQuarter                         TickerOption = "e9"
-	TODaysLow                                        TickerOption = "g"
-	TOHoldingsGainPercent                            TickerOption = "g1"
-	TOAnnualizedGain                                 TickerOption = "g3"
-	TOHoldingsGain                                   TickerOption = "g4"
-	TOHoldingsGainPercentRealtime                    TickerOption = "g5"
-	TOHoldingsGainRealtime                           TickerOption = "g6"
-	TODaysHigh                                       TickerOption = "h"
-	TOMoreInfo                                       TickerOption = "i"
-	TOOrderBookRealtime                              TickerOption = "i5"
-	TOYearLow                                        TickerOption = "j"
-	TOMarketCapitalization                           TickerOption = "j1"
-	TOMarketCapRealtime                              TickerOption = "j3"
-	TOEBITDA                                         TickerOption = "j4"
-	TOChangeFromYearLow                              TickerOption = "j5"
-	TOPercentChangeFromYearLow                       TickerOption = "j6"
-	TOYearHigh                                       TickerOption = "k"
-	TOLastTradeRealtimeWithTime                      TickerOption = "k1"
-	TOChangePercentRealtime                          TickerOption = "k2"
-	TOChangeFromYearHigh                             TickerOption = "k4"
-	TOPercebtChangeFromYearHigh                      TickerOption = "k5"
-	TOLastTradeWithTime                              TickerOption = "l"
-	TOLastTradePriceOnly                             TickerOption = "l1"
-	TOHighLimit                                      TickerOption = "l2"
-	TOLowLimit                                       TickerOption = "l3"
-	TODaysRange                                      TickerOption = "m"
-	TODaysRangeRealtime                              TickerOption = "m2"
-	TOFiftydayMovingAverage                          TickerOption = "m3"
-	TOTwoHundreddayMovingAverage                     TickerOption = "m4"
-	TOChangeFromTwoHundreddayMovingAverage           TickerOption = "m5"
-	TOPercentChangeFromTwoHundreddayMovingAverage    TickerOption = "m6"
-	TOChangeFromFiftydayMovingAverage                TickerOption = "m7"
-	TOPercentChangeFromFiftydayMovingAverage         TickerOption = "m8"
-	TOName                                           TickerOption = "n"
-	TONotes                                          TickerOption = "n4"
-	TOOpen                                           TickerOption = "o"
-	TOPreviousClose                                  TickerOption = "p"
-	TOPricePaid                                      TickerOption = "p1"
-	TOChangeinPercent                                TickerOption = "p2"
-	TOPriceSales                                     TickerOption = "p5"
-	TOPriceBook                                      TickerOption = "p6"
-	TOExDividendDate                                 TickerOption = "q"
-	TOPERatio                                        TickerOption = "r"
-	TODividendPayDate                                TickerOption = "r1"
-	TOPERatioRealtime                                TickerOption = "r2"
-	TOPEGRatio                                       TickerOption = "r5"
-	TOPriceEPSEstimateCurrentYear                    TickerOption = "r6"
-	TOPriceEPSEstimateNextYear                       TickerOption = "r7"
-	TOSymbol                                         TickerOption = "s"
-	TOSharesOwned                                    TickerOption = "s1"
-	TOShortRatio                                     TickerOption = "s7"
-	TOLastTradeTime                                  TickerOption = "t1"
-	TOTickerTrend                                    TickerOption = "t7"
-	TOOneyrTargetPrice                               TickerOption = "t8"
-	TOVolume                                         TickerOption = "v"
-	TOHoldingsValue                                  TickerOption = "v1"
-	TOHoldingsValueRealtime                          TickerOption = "v7"
-	TOYearRange                                      TickerOption = "w"
-	TODaysValueChange                                TickerOption = "w1"
-	TODaysValueChangeRealtime                        TickerOption = "w4"
-	TOStockExchange                                  TickerOption = "x"
-	TODividendYield                                  TickerOption = "y"
-)
-
-func buildFParams(values []TickerOption) string {
-	// ew ew ew ew
-	foo := *(*[]string)((unsafe.Pointer(&values)))
-	return strings.Join(foo, "")
+// APIError represents an error response
+type APIError struct {
+	Code        string `json:"code"`        // "argument-error"
+	Description string `json:"description"` // "Missing value for the \"symbols\" argument"
 }
+
+// APIResult represents a successful query
+type APIResult struct {
+	Ask                               float64 `json:"ask,omitempty"`                               // 0.0,
+	AskSize                           int     `json:"askSize,omitempty"`                           // 0,
+	AverageDailyVolume10Day           int64   `json:"averageDailyVolume10Day,omitempty"`           // 14627912,
+	AverageDailyVolume3Month          int64   `json:"averageDailyVolume3Month,omitempty"`          // 16268415,
+	Bid                               float64 `json:"bid,omitempty"`                               // 0.0,
+	BidSize                           int     `json:"bidSize,omitempty"`                           // 0,
+	BookValue                         float64 `json:"bookValue,omitempty"`                         // 6.452,
+	Currency                          string  `json:"currency,omitempty"`                          // "USD",
+	EarningsTimestamp                 int64   `json:"earningsTimestamp,omitempty"`                 // 1509021000,
+	EarningsTimestampEnd              int64   `json:"earningsTimestampEnd,omitempty"`              // 1518442200,
+	EarningsTimestampStart            int64   `json:"earningsTimestampStart,omitempty"`            // 1518010200,
+	EpsForward                        float64 `json:"epsForward,omitempty"`                        // 0.45,
+	EpsTrailingTwelveMonths           float64 `json:"epsTrailingTwelveMonths,omitempty"`           // -0.627,
+	Exchange                          string  `json:"exchange,omitempty"`                          // "NYQ",
+	ExchangeDataDelayedBy             int     `json:"exchangeDataDelayedBy,omitempty"`             // 0,
+	ExchangeTimezoneName              string  `json:"exchangeTimezoneName,omitempty"`              // "America/New_York",
+	ExchangeTimezoneShortName         string  `json:"exchangeTimezoneShortName,omitempty"`         // "EST",
+	FiftyDayAverage                   float64 `json:"fiftyDayAverage,omitempty"`                   // 19.315556,
+	FiftyDayAverageChange             float64 `json:"fiftyDayAverageChange,omitempty"`             // 2.954445,
+	FiftyDayAverageChangePercent      float64 `json:"fiftyDayAverageChangePercent,omitempty"`      // 0.15295677,
+	FiftyTwoWeekHigh                  float64 `json:"fiftyTwoWeekHigh,omitempty"`                  // 22.4,
+	FiftyTwoWeekHighChange            float64 `json:"fiftyTwoWeekHighChange,omitempty"`            // -0.12999916,
+	FiftyTwoWeekHighChangePercent     float64 `json:"fiftyTwoWeekHighChangePercent,omitempty"`     // -0.005803534,
+	FiftyTwoWeekLow                   float64 `json:"fiftyTwoWeekLow,omitempty"`                   // 14.12,
+	FiftyTwoWeekLowChange             float64 `json:"fiftyTwoWeekLowChange,omitempty"`             // 8.150001,
+	FiftyTwoWeekLowChangePercent      float64 `json:"fiftyTwoWeekLowChangePercent,omitempty"`      // 0.5771955,
+	FinancialCurrency                 string  `json:"financialCurrency,omitempty"`                 // "USD",
+	ForwardPE                         float64 `json:"forwardPE,omitempty"`                         // 49.48889,
+	FullExchangeName                  string  `json:"fullExchangeName,omitempty"`                  // "NYSE",
+	GmtOffSetMilliseconds             int64   `json:"gmtOffSetMilliseconds,omitempty"`             // -18000000,
+	Language                          string  `json:"language,omitempty"`                          // "en-US",
+	LongName                          string  `json:"longName,omitempty"`                          // "Twitter, Inc.",
+	Market                            string  `json:"market,omitempty"`                            // "us_market",
+	MarketCap                         int64   `json:"marketCap,omitempty"`                         // 16471872512,
+	MarketState                       string  `json:"marketState,omitempty"`                       // "CLOSED",
+	MessageBoardId                    string  `json:"messageBoardId,omitempty"`                    // "finmb_35962803",
+	PostMarketChange                  float64 `json:"postMarketChange,omitempty"`                  // -0.010000229,
+	PostMarketChangePercent           float64 `json:"postMarketChangePercent,omitempty"`           // -0.044904485,
+	PostMarketPrice                   float64 `json:"postMarketPrice,omitempty"`                   // 22.26,
+	PostMarketTime                    int64   `json:"postMarketTime,omitempty"`                    // 1511398614,
+	PriceHint                         int     `json:"priceHint,omitempty"`                         // 2,
+	PriceToBook                       float64 `json:"priceToBook,omitempty"`                       // 3.451643,
+	QuoteSourceName                   string  `json:"quoteSourceName,omitempty"`                   // "Delayed Quote",
+	QuoteType                         string  `json:"quoteType,omitempty"`                         // "EQUITY",
+	RegularMarketChange               float64 `json:"regularMarketChange,omitempty"`               // 0.3900013,
+	RegularMarketChangePercent        float64 `json:"regularMarketChangePercent,omitempty"`        // 1.7824557,
+	RegularMarketDayHigh              float64 `json:"regularMarketDayHigh,omitempty"`              // 22.4,
+	RegularMarketDayLow               float64 `json:"regularMarketDayLow,omitempty"`               // 21.8,
+	RegularMarketOpen                 float64 `json:"regularMarketOpen,omitempty"`                 // 21.9,
+	RegularMarketPreviousClose        float64 `json:"regularMarketPreviousClose,omitempty"`        // 21.88,
+	RegularMarketPrice                float64 `json:"regularMarketPrice,omitempty"`                // 22.27,
+	RegularMarketTime                 int64   `json:"regularMarketTime,omitempty"`                 // 1511384466,
+	RegularMarketVolume               int64   `json:"regularMarketVolume,omitempty"`               // 21161825,
+	SharesOutstanding                 int64   `json:"sharesOutstanding,omitempty"`                 // 739644032,
+	ShortName                         string  `json:"shortName,omitempty"`                         // "Twitter, Inc.",
+	SourceInterval                    int     `json:"sourceInterval,omitempty"`                    // 15,
+	Symbol                            string  `json:"symbol,omitempty"`                            // "TWTR",
+	Tradeable                         bool    `json:"tradeable,omitempty"`                         // true,
+	TwoHundredDayAverage              float64 `json:"twoHundredDayAverage,omitempty"`              // 18.075928,
+	TwoHundredDayAverageChange        float64 `json:"twoHundredDayAverageChange,omitempty"`        // 4.1940727,
+	TwoHundredDayAverageChangePercent float64 `json:"twoHundredDayAverageChangePercent,omitempty"` // 0.23202531
+}
+
+// APIMessage represents a standard API response
+type APIMessage struct {
+	Error   *APIError   `json:"error,omitempty"`
+	Results []APIResult `json:"result,omitempty"`
+}
+
+// APIEnvelope is the wrapping envelope around a Yahoo Finance API response
+type APIEnvelope map[string]APIMessage
 
 // GetTickers asks Yahoo Finance for a complete rundown of information about
 // a given stock symbol, and returns it as a YahooQuote, or returns an error
 // if something goes wrong.
-func GetTickers(symbols []string, values []TickerOption) (TickerResults, error) {
+func GetTickers(symbols []string) ([]APIResult, error) {
 	query, err := url.Parse(apiYahooFinance)
 	if err != nil {
 		return nil, err
 	}
 
 	params := url.Values{
-		"s": {strings.Join(symbols, ",")},
-		"f": {buildFParams(values)},
+		"symbols": {strings.Join(symbols, ",")},
 	}
 	query.RawQuery = params.Encode()
 	client := http.Client{Timeout: Config.HTTPClientTimeout}
@@ -137,29 +117,29 @@ func GetTickers(symbols []string, values []TickerOption) (TickerResults, error) 
 		return nil, fmt.Errorf("Yahoo Finance API returned %d status",
 			resp.StatusCode)
 	}
-	if resp.Header["Content-Type"][0] != "application/octet-stream" {
+	if !strings.HasPrefix(resp.Header["Content-Type"][0], "application/json") {
 		return nil, fmt.Errorf("Yahoo Finance API returned `%s` content type",
 			resp.Header["Content-Type"][0])
 	}
 
-	r := csv.NewReader(resp.Body)
-	r.FieldsPerRecord = len(values)
-	records, err := r.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-	if len(records) != len(symbols) {
-		return nil, fmt.Errorf("Yahoo Finance API returned %d results, expected %d",
-			len(records), len(symbols))
-	}
-
-	results := make(TickerResults, len(records))
-	for i, record := range records {
-		result := make(map[TickerOption]string, len(values))
-		for j, field := range record {
-			result[values[j]] = field
+	var envelope APIEnvelope
+	var results []APIResult
+	dec := json.NewDecoder(resp.Body)
+	for {
+		if err := dec.Decode(&envelope); err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
 		}
-		results[i] = result
+		for _, msg := range envelope {
+			if msg.Error != nil {
+				return nil, fmt.Errorf("Yahoo Finance API returned `%s` error: %s",
+					msg.Error.Code, msg.Error.Description)
+			}
+			for _, result := range msg.Results {
+				results = append(results, result)
+			}
+		}
 	}
 	return results, nil
 }

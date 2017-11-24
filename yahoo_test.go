@@ -9,28 +9,27 @@ import (
 
 func TestGetTickers(t *testing.T) {
 	tickerHandler := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/octet-stream")
-		fmt.Fprint(w, "TEST,\"Test\"\nMOAR,\"Moar\"")
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, "{\"quoteResponse\":{\"result\":[{\"symbol\":\"TEST\",\"longName\":\"Test\"},{\"symbol\":\"MOAR\",\"longName\":\"Moar\"}]}}")
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(tickerHandler))
 	defer ts.Close()
 
 	apiYahooFinance = ts.URL
-	tickers, err := GetTickers([]string{"TEST", "TEST1"},
-		[]TickerOption{TOSymbol, TOName})
+	tickers, err := GetTickers([]string{"TEST", "TEST1"})
 	if err != nil {
 		t.Errorf("Error: %v", err)
 	}
-	if tickers[0][TOSymbol] != "TEST" || tickers[0][TOName] != "Test" ||
-		tickers[1][TOSymbol] != "MOAR" || tickers[1][TOName] != "Moar" {
+	if tickers[0].Symbol != "TEST" || tickers[0].LongName != "Test" ||
+		tickers[1].Symbol != "MOAR" || tickers[1].LongName != "Moar" {
 		t.Errorf("result mismatch")
 	}
 }
 
 func TestYahooDown(t *testing.T) {
 	apiYahooFinance = "http://127.0.0.1:8888/"
-	_, err := GetTickers([]string{"TEST"}, []TickerOption{TOSymbol})
+	_, err := GetTickers([]string{"TEST"})
 	if err == nil {
 		t.Errorf("GetTickers didn't catch unreachable API endpoint")
 	}
@@ -45,7 +44,7 @@ func TestYahooErrorStatus(t *testing.T) {
 	defer ts.Close()
 
 	apiYahooFinance = ts.URL
-	_, err := GetTickers([]string{"TEST"}, []TickerOption{TOSymbol})
+	_, err := GetTickers([]string{"TEST"})
 	if err == nil {
 		t.Errorf("GetTickers didn't catch error from API endpoint")
 	}
@@ -61,7 +60,7 @@ func TestYahooErrorContentType(t *testing.T) {
 	defer ts.Close()
 
 	apiYahooFinance = ts.URL
-	_, err := GetTickers([]string{"TEST"}, []TickerOption{TOSymbol})
+	_, err := GetTickers([]string{"TEST"})
 	if err == nil {
 		t.Errorf("GetTickers didn't catch bad content type")
 	}
@@ -77,8 +76,7 @@ func TestYahooBadRecordCount(t *testing.T) {
 	defer ts.Close()
 
 	apiYahooFinance = ts.URL
-	_, err := GetTickers([]string{"TEST"},
-		[]TickerOption{TOSymbol})
+	_, err := GetTickers([]string{"TEST"})
 	if err == nil {
 		t.Errorf("GetTickers didn't catch wrong number of records")
 	}
@@ -94,8 +92,7 @@ func TestYahooBadFieldCount(t *testing.T) {
 	defer ts.Close()
 
 	apiYahooFinance = ts.URL
-	_, err := GetTickers([]string{"TEST", "TEST1"},
-		[]TickerOption{TOSymbol, TOName})
+	_, err := GetTickers([]string{"TEST", "TEST1"})
 	if err == nil {
 		t.Errorf("GetTickers didn't catch wrong number of fields")
 	}
@@ -103,7 +100,7 @@ func TestYahooBadFieldCount(t *testing.T) {
 
 func TestYahooBadURL(t *testing.T) {
 	apiYahooFinance = ":"
-	_, err := GetTickers(nil, nil)
+	_, err := GetTickers(nil)
 	if err == nil {
 		t.Errorf("GetTickers didn't catch invalid URL")
 	}
