@@ -15,9 +15,6 @@ import (
 // Config is our global (read-only) configuration state.
 var Config Configuration
 
-// Commands are any Slack commands that we recognize, and their handlers
-var Commands SlashCommands
-
 var version = "development version"
 var timestamp = "unknown"
 
@@ -62,10 +59,6 @@ func parseCli() Configuration {
 func main() {
 	Config = parseCli()
 	log.Printf("%s started\n", versionString())
-
-	Commands = SlashCommands{
-		"/ticker": Ticker,
-	}
 
 	http.Handle("/cmd", RequestIDMiddleware(ErrorHandler(SlackDispatcher)))
 	if err := http.ListenAndServe(Config.ListenAddress, nil); err != nil {

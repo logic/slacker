@@ -234,3 +234,7 @@ func TickerPoster(opts TickerOpts, responseURL string, ctx context.Context) {
 			resp.StatusCode, responseURL, string(body))
 	}
 }
+
+func init() {
+	Commands["/ticker"] = Ticker
+}

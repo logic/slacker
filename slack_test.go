@@ -85,12 +85,9 @@ func TestSlackDispatcher(t *testing.T) {
 		AsyncResponse:     false,
 		HTTPClientTimeout: time.Duration(10) * time.Second,
 	}
-	handler := ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
+	Commands["/valid-command"] = ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	})
-	Commands = SlashCommands{
-		"/valid-command": handler,
-	}
 	uri := "http://slacker.logic.github.io/cmd"
 
 	for _, test := range tests {

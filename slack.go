@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-// SlashCommands represents a slack command and a handler for it
-type SlashCommands map[string]ErrorHandler
+// Commands holds our registry of recognized /-commands
+var Commands = map[string]ErrorHandler{}
 
 // SlackDispatcher does basic validation, then routes Slack slash commands
 // to an appropriate handler.
